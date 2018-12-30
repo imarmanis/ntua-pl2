@@ -1,3 +1,3 @@
 all: gc.c gc.h
-	gcc -Wall -Wextra -g gc.c -o gc
+	gcc -Wall -Wextra -O3 gc.c -o gc
 
