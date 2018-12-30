@@ -31,7 +31,7 @@ with open(sys.argv[1], 'rt') as f:
             continue
         program.append(line)
         counter += 1
-        if line.isdigit() or line.startswith('_'):
+        if line.isdigit() or line.startswith('-'):
             value = int(line)
             if -2**7 <= value < 2**7:
                 counter += 1
@@ -44,7 +44,7 @@ with open(sys.argv[1], 'rt') as f:
                 sys.exit(1)
         elif line.startswith('jump') or line.startswith('jnz'):
             counter += 2
-        elif line.startswith('dup'):
+        elif line.startswith('dup') or line.startswith('swap'):
             counter += 1
 
 opcode = {
@@ -102,7 +102,7 @@ with open(sys.argv[2], 'wb') as f:
             f.write(opcode[words[0]])
             f.write(labels[words[1]].to_bytes(2, byteorder=byteorder,
                                               signed=False))
-        elif instr.startswith('dup'):
+        elif instr.startswith('dup') or instr.startswith('swap'):
             words = instr.split()
             f.write(opcode[words[0]])
             f.write(int(words[1]).to_bytes(1, byteorder=byteorder,
