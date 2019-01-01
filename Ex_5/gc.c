@@ -7,9 +7,9 @@
 
 #define enci(x) (((int32_t) (x)) << 1)
 #define deci(x) (((int32_t) (x)) >> 1)
-#define encp(x) ((((uint32_t) (x)) << 1) + 1)
+#define encp(x) ((((uint32_t) (x)) << 1) | 1)
 #define decp(x) (((uint32_t) (x)) >> 1)
-#define isp(x) ((x) & (1 << 31))
+#define isp(x) ((x) & 1)
 
 uint16_t get_2b(uint8_t *p)
 {
@@ -61,8 +61,7 @@ uint32_t forward(uint32_t p)
         return p;
 
     if (!isp(ptr->hd) || is_from(&heap.start[decp(ptr->hd)])){
-        heap.alloc->hd = ptr->hd;
-        heap.alloc->tl = ptr->tl;
+        *heap.alloc = *ptr;
         ptr->hd = encp(heap.alloc++ - heap.start);
     }
 
