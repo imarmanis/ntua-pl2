@@ -45,9 +45,9 @@ instance Show Type where
 
 -- Main program
 
-newtype Constraints = C [(Type, Type)]
-newtype Enviroment = E (Map.Map String Type)
-newtype Unifier = U (Map.Map Int Type)
+type Constraints = [(Type, Type)]
+type Enviroment = (Map.Map String Type)
+type Unifier = [(Int, Type)]
 
 newVar :: State Int Type
 newVar = Tvar <$> (modify (+1) >> Control.Monad.State.get)
@@ -55,63 +55,56 @@ newVar = Tvar <$> (modify (+1) >> Control.Monad.State.get)
 typeInfer :: Expr -> Maybe Type
 typeInfer expr =
   let (t, c) = alacurry expr in
-  flip applyUnifier t <$> unify c
+  applyUnifier t <$> unify c
   where
     alacurry :: Expr -> (Type, Constraints)
-    alacurry ex = evalState (construct ex $ E Map.empty) 0
+    alacurry ex = evalState (construct ex Map.empty) 0
       where
         construct :: Expr -> Enviroment -> State Int (Type, Constraints)
-        construct (Evar s) (E env) = return (env Map.! s, C [])
-        construct (Eabs s e) (E env) = do
+        construct (Evar s) env = return (env Map.! s, [])
+        construct (Eabs s e) env = do
           a <- newVar
-          (t, c) <- construct e (E $ Map.insert s a env)
+          (t, c) <- construct e (Map.insert s a env)
           return (Tfun a t, c)
-        construct (Eapp e1 e2) (E env) = do
-          (t1, C c1) <- construct e1 (E env)
-          (t2, C c2) <- construct e2 (E env)
+        construct (Eapp e1 e2) env = do
+          (t1, c1) <- construct e1 env
+          (t2, c2) <- construct e2 env
           a <- newVar
-          return (a, C $ (t1,Tfun t2 a):(c2 ++ c1))
+          return (a, (t1,Tfun t2 a):(c2 ++ c1))
 
     unify :: Constraints -> Maybe Unifier
-    unify (C []) = Just (U Map.empty)
-    unify (C ((t1,t2):c))
-      | t1 == t2 = unify (C c)
-    unify (C ((Tvar a, t2):c))
+    unify [] = Just []
+    unify ((t1,t2):c)
+      | t1 == t2 = unify c
+    unify ((Tvar a, t2):c)
       | not $ varInExpr a t2 = do
-        u <- unify (replace a t2 (C c))
-        return $ compose u (a,t2)
-    unify (C ((t1, Tvar a):c)) = unify (C ((Tvar a, t1):c))
-    unify (C ((Tfun t11 t12, Tfun t21 t22):c)) =
-      unify(C $ (t11,t21):(t12,t22):c)
+        u <- unify (replaceConstraints c (a, t2))
+        return $ (a,t2):u
+    unify ((t1, Tvar a):c) = unify ((Tvar a, t1):c)
+    unify ((Tfun t11 t12, Tfun t21 t22):c) =
+      unify((t11,t21):(t12,t22):c)
     unify _ = Nothing
-
-    compose :: Unifier -> (Int, Type) -> Unifier
-    compose (U u) (k, t) =
-      let new = applyUnifier (U u) t
-      in U (Map.insert k new u)
 
     varInExpr :: Int -> Type -> Bool
     varInExpr a = vIe where
       vIe (Tvar b) = a == b
       vIe (Tfun t1 t2) = vIe t1 || vIe t2
 
-    replace :: Int -> Type -> Constraints -> Constraints
-    replace a  t (C c) = C (fmap  rpl c) where
-      rpl (te1, te2) = (h te1, h te2) where
-        h t'@(Tvar b) = if a == b then t else t'
-        h (Tfun t1 t2) = Tfun (h t1) (h t2)
+    replaceConstraints :: Constraints -> (Int, Type) -> Constraints
+    replaceConstraints c x = fmap rpl c where
+      rpl (te1, te2) = (replaceVar te1 x, replaceVar te2 x)
 
-    applyUnifier ::  Unifier -> Type -> Type
-    applyUnifier (U u) = repl where
-      repl def@(Tvar a) = Map.findWithDefault def a u
-      repl (Tfun t1 t2) = Tfun (repl t1) (repl t2)
+    replaceVar :: Type -> (Int, Type) -> Type
+    replaceVar t@(Tvar a) (b, t') = if a == b then t' else t
+    replaceVar (Tfun t1 t2) x = Tfun (replaceVar t1 x) (replaceVar t2 x)
+
+    applyUnifier ::  Type -> Unifier -> Type
+    applyUnifier = foldl replaceVar
 
 processExpr :: IO ()
 processExpr = do
   s <- getLine
-  let e = read s :: Expr
-  let mt = typeInfer e
-  case mt of
+  case typeInfer $ read s of
     Just t -> print $ reorder t
     _ -> putStrLn "type error"
   where
@@ -126,12 +119,7 @@ processExpr = do
             Nothing -> do
               put (Map.insert a cnt imap, cnt + 1)
               return $ Tvar cnt
-        rdr (Tfun t1 t2) = do
-          t1' <- rdr t1
-          t2' <- rdr t2
-          return (Tfun t1' t2')
+        rdr (Tfun t1 t2) = liftM2 Tfun (rdr t1) (rdr t2)
 
 main :: IO [()]
-main = do
-  n <- readLn
-  Monad.replicateM n processExpr
+main = readLn >>= flip Monad.replicateM processExpr
