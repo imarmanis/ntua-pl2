@@ -4,3 +4,4 @@
 !*.hs
 !*.pdf
 !*.py
+venv/
