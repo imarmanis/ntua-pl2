@@ -2,6 +2,7 @@
 !.gitignore
 !*/
 !*.hs
+!*.php
 !*.pdf
 !*.py
 venv/
