@@ -23,48 +23,48 @@ type S = Var -> D
 
 semC :: C -> S -> S
 semC Cskip s = s
-semC (Cassign x e) s = update s x (semD e s)
+semC (Cassign x e) s = update s x (semE e s)
 semC (Cseq c1 c2) s = semC c2 (semC c1 s)
 semC (Cfor e c) s = expon (semC c) n s
-  where DInt n = semD e s
+  where DInt n = semE e s
 semC (Cif e c1 c2) s
     | b = semC c1 s
     | otherwise = semC c2 s
-  where DBool b = semD e s
+  where DBool b = semE e s
 semC (Cwhile e c) s = fix bigF s
   where bigF f s'
             | b = f (semC c s')
             | otherwise = s'
-          where DBool b = semD e s'
+          where DBool b = semE e s'
 
-semD :: E -> S -> D
-semD Ezero _ = DInt 0
-semD (Esucc e) s = DInt $ n + 1
-  where DInt n = semD e s
-semD (Epred e) s = DInt $ n - 1
-  where DInt n = semD e s
-semD (Eif e e1 e2) s
-    | b = semD e1 s
-    | otherwise = semD e2 s
-  where DBool b = semD e s
-semD (Evar x) s = s x
-semD Etrue _ = DBool True
-semD Efalse _ = DBool False
-semD (Elt e1 e2) s = DBool (n1 < n2)
-  where DInt n1 = semD e1 s
-        DInt n2 = semD e2 s
-semD (Eeq e1 e2) s = DBool (x1 == x2)
-  where x1 = semD e1 s
-        x2 = semD e2 s
-semD (Enot e) s = DBool (not b)
-  where DBool b = semD e s
-semD (Econs e1 e2) s = DCons (x1, x2)
-  where x1 = semD e1 s
-        x2 = semD e2 s
-semD (Ehd e) s = hd
-  where DCons (hd, _) = semD e s
-semD (Etl e) s = tl
-  where DCons (_, tl) = semD e s
+semE :: E -> S -> D
+semE Ezero _ = DInt 0
+semE (Esucc e) s = DInt $ n + 1
+  where DInt n = semE e s
+semE (Epred e) s = DInt $ n - 1
+  where DInt n = semE e s
+semE (Eif e e1 e2) s
+    | b = semE e1 s
+    | otherwise = semE e2 s
+  where DBool b = semE e s
+semE (Evar x) s = s x
+semE Etrue _ = DBool True
+semE Efalse _ = DBool False
+semE (Elt e1 e2) s = DBool (n1 < n2)
+  where DInt n1 = semE e1 s
+        DInt n2 = semE e2 s
+semE (Eeq e1 e2) s = DBool (n1 == n2)
+  where DInt n1 = semE e1 s
+        DInt n2 = semE e2 s
+semE (Enot e) s = DBool (not b)
+  where DBool b = semE e s
+semE (Econs e1 e2) s = DCons (x1, x2)
+  where x1 = semE e1 s
+        x2 = semE e2 s
+semE (Ehd e) s = hd
+  where DCons (hd, _) = semE e s
+semE (Etl e) s = tl
+  where DCons (_, tl) = semE e s
 
 -- auxiliary functions
 
