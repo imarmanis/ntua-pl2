@@ -1,0 +1,182 @@
+\documentclass[a4paper,oneside, 12pt, fleqn]{article}
+\usepackage[margin=0.7in]{geometry}
+
+\usepackage[cm-default]{fontspec}
+\usepackage{xunicode}
+\usepackage{xltxtra}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\allowdisplaybreaks
+
+\usepackage{xgreek}
+
+\setmainfont[Mapping=tex-text]{CMU Serif}
+
+
+
+\title{
+	\textbf{Γλώσσες Προγραμματισμού II}\\
+	Άσκηση 7\\
+	Δηλωτική σημασιολογία
+ }
+\author{
+	Μαρμάνης Ιάσων, 03114088
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\subsection*{Πεδίο σημασιολογικών τιμών των εκφράσεων}
+
+\begin{align*}
+&D_1 = \mathbb{N} \cup\mathbb{B} \\
+&D_{i+1} = D_i \cup \{\,(x,y) \mid x, y \in D_i \,\} \\
+&D = \lim_{i\to\infty} D_i
+\end{align*}
+
+\subsection*{Κατάσταση}
+
+\begin{align*}
+&S : Var \rightarrow D
+\end{align*}
+
+\subsection*{Σημασιολογικές συναρτήσεις}
+
+\begin{align*}
+&\mathcal{V} [\![ \mathbf{x} ]\!] : Var \\
+&\mathcal{C} [\![ \mathbf {C} ]\!]   : S \rightarrow S_\bot \\
+&\mathcal{E} [\![ \mathbf {E} ]\!]   : S \rightarrow D_\bot \\
+\\
+&\mathcal{C} [\![ \mathbf {\text{skip}} ]\!]s = s \\
+&\mathcal{C} [\![ \mathbf {\textbf{x} \coloneqq \textbf{e}} ]\!] s = \left( y \rightarrow \left\{
+\begin{array}{ll}
+	\mathcal{E} [\![ \mathbf {\textbf{e}} ]\!]s & \mathcal{V} [\![ \mathbf {x} ]\!] = y \\
+	s(y) & otherwise \\
+\end{array}
+\right. \right) \\
+&\mathcal{C} [\![ \mathbf {C_0 ; C_1} ]\!]s = 
+\mathcal{C} [\![ \mathbf {C_1} ]\!]^+
+\left( \mathcal{C} [\![ \mathbf{C_0} ]\!]
+\right) \\
+&\mathcal{C} [\![ \mathbf 
+{\text{if } E \text{ then } C_0 \text{ else } C_1} 
+]\!]s = 
+\left\{
+\begin{array}{ll}
+	\mathcal{C} [\![ \mathbf{C_0}]\!]s, 
+	& \mathcal{E} [\![\mathbf{E}]\! ]s = true\\
+	\mathcal{C} [\![ \mathbf{C_1}]\!]s, 
+	& \mathcal{E} [\![\mathbf{E}]\! ]s = false\\
+	\bot, 
+	& otherwise \\
+\end{array}
+\right.\\
+&\mathcal{C} [\![ \mathbf {\text{for } E \text{ do } C} ]\!]s =
+\left\{
+\begin{array}{ll}
+	\left(\mathcal{C} [\![\mathbf{C}]\!]^+ \right)^n \left(s \right), & n = \mathcal{E} [\![\mathbf{E}]\!]s \in \mathbb{N}\\
+	\bot, & otherwise\\
+\end{array}
+\right. \\
+&\mathcal{C} [\![\mathbf{\text{while } E \text{ do } C}]\!]s =
+\mathbf{\text{fix }}F \space s \\
+&F f s = 
+\left\{
+\begin{array}{ll}
+	f\left( 
+		\mathcal{C} [\![\mathbf{C}]\!]s
+	\right), & \mathcal{E} [\![\mathbf{E}]\!]s = true \\
+	s, & \mathcal{E} [\![\mathbf{E}]\!]s = false\\
+	\bot, &otherwise
+\end{array}
+\right. \\
+\\
+&\mathcal{E} [\![ \mathbf{0} ]\!]s = 0 \\
+&\mathcal{E} [\![ \mathbf{\text{succ } E} ]\!]s =
+\left\{
+\begin{array}{ll}
+	n + 1, & n = \mathcal{E} [\![ \mathbf{E} ]\!]s \in \mathbb{N} \\
+	\bot, & otherwise\\
+\end{array}
+\right. \\
+&\mathcal{E} [\![ \mathbf{\text{pred } E} ]\!]s =
+\left\{
+\begin{array}{ll}
+n - 1, & n = \mathcal{E} [\![ \mathbf{E} ]\!]s \in \mathbb{N} \\
+\bot, & otherwise\\
+\end{array}
+\right. \\
+&\mathcal{E} [\![ \mathbf{\text{true}} ]\!]s = true \\
+&\mathcal{E} [\![ \mathbf{\text{false}} ]\!]s = false \\
+&\mathcal{E} [\![ \mathbf{x} ]\!]s = 
+s(\mathcal{V} [\![ \mathbf {x} ]\!]) \\
+&\mathcal{E} [\![ \mathbf{E_0 < E_1} ]\!]s = 
+\left\{
+\begin{array}{ll}
+	true, & x < y : x, y = \mathcal{E} [\![ \mathbf{E_0} ]\!]s,\mathcal{E} [\![ \mathbf{E_1} ]\!]s \in \mathbb{N}  \\
+	false, & x \geq y : x, y = \mathcal{E} [\![ \mathbf{E_0} ]\!]s,\mathcal{E} [\![ \mathbf{E_1} ]\!]s \in \mathbb{N}  \\
+	\bot, & otherwise\\
+\end{array}
+\right. \\
+&\mathcal{E} [\![ \mathbf{E_0 = E_1} ]\!]s = 
+\left\{
+\begin{array}{ll}
+	true, & x = y : x, y = \mathcal{E} [\![ \mathbf{E_0} ]\!]s,\mathcal{E} [\![ \mathbf{E_1} ]\!]s \in \mathbb{N}  \\
+	false, & x \neq y : x, y = \mathcal{E} [\![ \mathbf{E_0} ]\!]s,\mathcal{E} [\![ \mathbf{E_1} ]\!]s \in \mathbb{N}  \\
+	\bot, & otherwise\\
+\end{array}
+\right. \\
+&\mathcal{E} [\![ \mathbf{\text{not }E} ]\!]s = 
+\left\{
+\begin{array}{ll}
+	true, & true = \mathcal{E} [\![ \mathbf{E} ]\!]s \in \mathbb{B}  \\
+	false, & false  = \mathcal{E} [\![ \mathbf{E} ]\!]s \in \mathbb{B}  \\
+	\bot, & otherwise \\
+\end{array}
+\right. \\
+&\mathcal{E} [\![ \mathbf 
+{\text{if } E_0 \text{ then } E_1 \text{ else } E_2} 
+]\!]s = 
+\left\{
+\begin{array}{ll}
+	\mathcal{E} [\![ \mathbf{E_1}]\!]s, 
+		& \mathcal{E} [\![\mathbf{E_0}]\! ]s = true\\
+	\mathcal{E} [\![ \mathbf{E_2}]\!]s, 
+		& \mathcal{E} [\![\mathbf{E_0}]\! ]s = false\\
+	\bot, & otherwise\\
+\end{array}
+\right.\\
+&\mathcal{E} [\![ \mathbf{E_0 : E_1} ]\!]s = 
+\left(
+\mathcal{E} [\![ \mathbf{E_0} ]\!]s,
+\mathcal{E} [\![ \mathbf{E_1} ]\!]s
+\right)\\
+&\mathcal{E} [\![ \mathbf{\text{hd }E} ]\!]s = 
+\left\{
+\begin{array}{ll}
+	x, 
+	& (x,y) = \mathcal{E} [\![\mathbf{E}]\! ]s\\
+	\bot, & otherwise\\
+\end{array}
+\right.\\
+&\mathcal{E} [\![ \mathbf{\text{tl }E} ]\!]s = 
+\left\{
+\begin{array}{ll}
+y, 
+& (x,y) = \mathcal{E} [\![\mathbf{E}]\! ]s\\
+\bot, & otherwise\\
+\end{array}
+\right.\\
+\end{align*}
+
+\subsection*{Παραδοχές}
+Επειδή η γλώσσα $WHILE^{cons}$ είναι dynamically typed, η σημασιολογική τιμή των εκφράσεων και των εντολών θα είναι $\bot$ όταν οι σημασιολογικές τιμές των εκφράσεων και των εντολών από τις οποίες αποτελούνται δεν ανήκουν στα κατάλληλα σύνολα.
+
+
+
+\end{document}
