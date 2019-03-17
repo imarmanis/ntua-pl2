@@ -6,4 +6,5 @@
 !*.php
 !*.pdf
 !*.py
+!*.txt
 venv/
