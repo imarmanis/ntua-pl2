@@ -1,0 +1,277 @@
+\documentclass[a4paper,oneside, 12pt, fleqn]{article}
+\usepackage[margin=0.7in]{geometry}
+
+\usepackage[cm-default]{fontspec}
+\usepackage{xunicode}
+\usepackage{xltxtra}
+
+\usepackage{mathtools}
+\allowdisplaybreaks
+
+\usepackage{floatflt,amsmath,amssymb}
+\usepackage[ligature, inference]{semantic}
+\usepackage{syntax}
+
+
+\usepackage{xgreek}
+
+\setmainfont[Mapping=tex-text]{CMU Serif}
+
+
+
+\title{
+	\textbf{Γλώσσες Προγραμματισμού II}\\
+	Άσκηση 8\\
+	Συστήματα τύπων\\
+	Σημασιολογία μεγάλων βημάτων
+ }
+\author{
+	Μαρμάνης Ιάσων, 03114088
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+
+%\mathlig{->}{\rightarrow}
+%\mathlig{|-}{\vdash}
+%\mathlig{=>}{\Rightarrow}
+%\mathligson
+
+\paragraph*{Ορισμός γλώσσας}
+\begin{align*}
+	s &\Coloneqq (e, m)\\
+	\\
+	e &\Coloneqq n \mid true \mid false
+	\mid -e \mid \neg e \mid e_1 + e_2 
+	\mid e_1 \wedge e_2 \mid e_1 < e_2
+	\mid if\; e\; then\; e_1\; else\; e_2\\
+	&\mid x \mid \lambda x.\; e \mid e_1 e_2\\
+	&\mid ref\; e \mid \; ! e \mid e_1 \Coloneqq e_2 \mid loc_i \mid unit\\
+	\\
+	u &\Coloneqq n \mid true \mid false\\
+	&\mid \lambda x.\; e \\
+	&\mid loc_i \mid unit
+\end{align*}
+
+\paragraph*{Σημασιολογία}
+\[
+\inference
+{
+	(e_1, m) \Downarrow (u_1, m') 
+	\quad (e_2, m')  \Downarrow (u_2, m'')
+	\quad \left([\![\circ]\!](u_1, u_2), m''\right)
+		\Downarrow (u, m^{'''})
+}
+{
+	(e_1 \circ e_2, m) \Downarrow 
+	(u, m^{'''})
+}
+\]
+\[
+\inference
+{
+	(e, m) \Downarrow (u, m')
+	\quad ([\![\diamond]\!](u), m') \Downarrow (u', m'')
+}
+{ 
+	(\diamond e, m) \Downarrow (u', m'')
+}
+\]
+
+\[
+\inference
+{(e, m) \Downarrow (true, m') \quad (e_1, m')
+	 \Downarrow (u, m'')}
+{(if\; e \; then\; e_1\; else\; e_2, m) \Downarrow (u, m'')}
+\quad\quad
+\inference
+{(e, m) \Downarrow (false, m') \quad (e_2, m')
+	\Downarrow (u, m'')}
+{(if\; e \; then\; e_1\; else\; e_2, m) \Downarrow (u, m'')}
+\]
+
+\[
+\inference
+{(e_1, m) \Downarrow (\lambda x.\; e, m') 
+	\quad (e_2, m') \Downarrow (u, m'')
+	\quad (e[x \coloneqq u], m'') \Downarrow (u', m^{'''})
+}
+{(e_1 e_2, m) \Downarrow 
+	\left(u, m^{'''}\right)}
+\]
+
+\[
+\inference
+{
+	(e, m) \Downarrow (loc_i, m')
+	\quad m'(i) = u
+}
+{(!e, m) \Downarrow (u,m')}
+\qquad
+\inference
+{
+	(e_1, m) \Downarrow (loc_i, m')
+	\quad (e_2, m') \Downarrow (u, m'')
+}
+{
+	(e_1 \coloneqq e_2, m) \Downarrow \left(unit, 
+		m'' \left\{i \mapsto u \right\} \right)}
+\]
+
+
+\[
+\inference
+{
+	(e, m) \Downarrow (u, m')
+	\qquad j = max\left(dom\left(m'\right) \right) + 1
+}
+{(ref\;e, m) \Downarrow (loc_j, 
+	m')\left\{j \mapsto u \right\}}
+\]
+
+\paragraph*{Σύστημα τύπων}
+\begin{align*}
+\tau &\Coloneqq Int \mid Bool\\
+&\mid \tau_1 \rightarrow \tau_2\\
+&\mid Ref\; \tau \mid Unit \\
+\end{align*}
+\[
+\inference
+{
+	\Gamma; M \vdash e_1 : Int \quad \Gamma; M \vdash e_2 : Int
+}
+{
+	\Gamma; M \vdash e_1 + e_2 : Int
+}
+\qquad
+\inference
+{
+	\Gamma; M \vdash e : Int
+}
+{ 
+	\Gamma; M \vdash -e : Int
+}
+\qquad
+\inference
+{
+	\Gamma; M \vdash e : Bool
+}
+{ 
+	\Gamma; M \vdash \neg e : Bool
+}
+\]
+
+\[
+\inference
+{
+	\Gamma; M \vdash e_1 : Bool \quad \Gamma; M \vdash e_2 : Bool
+}
+{
+	\Gamma; M \vdash e_1 \wedge e_2 : Bool
+}
+\qquad
+\inference
+{
+	\Gamma; M \vdash e_1 : Int \quad \Gamma; M \vdash e_2 : Int
+}
+{
+	\Gamma; M \vdash e_1 < e_2 : Bool
+}
+\]
+
+\[
+\inference
+{
+	\Gamma; M \vdash e_1 : \tau \quad \Gamma; M \vdash e_2 : \tau
+}
+{
+	\Gamma; M \vdash if\; e \; then\; e_1\; else\; e_2 : \tau
+}
+\qquad
+\inference
+{
+	(x, \tau) \in \Gamma
+}
+{
+	\Gamma; M \vdash x : \tau
+}
+\]
+
+\[
+\inference
+{
+	\Gamma, x:\tau\; ; M \vdash	e : \tau^{'}
+}
+{
+	\Gamma; M \vdash \lambda x.\; e : \tau \rightarrow \tau^{'}
+}
+\qquad
+\inference
+{
+	\Gamma; M \vdash e_1 : \tau \rightarrow \tau^{'}
+	\quad \Gamma; M \vdash e_2 : \tau
+}
+{
+	\Gamma; M \vdash e_1 e_2 : \tau^{'}
+}
+\]
+
+\[
+\inference
+{
+	\Gamma; M \vdash e : \tau
+}
+{
+	\Gamma; M \vdash ref\; e : Ref\; \tau
+}
+\qquad
+\inference
+{
+	\Gamma; M \vdash e : Ref\;\tau
+}
+{
+	\Gamma; M \vdash \; !e : \tau
+}
+\]
+
+
+\[
+\inference
+{
+	\Gamma; M \vdash e_1 : Ref\; \tau
+	\quad \Gamma; M \vdash e_2 : \tau
+}
+{
+	\Gamma; M \vdash e_1 \coloneqq e_2 : Unit
+}
+\qquad
+\inference
+{
+	M(i) = \tau
+}
+{
+	\Gamma; M \vdash loc_i : Ref\;\tau
+}
+\]
+
+\paragraph*{Θεώρημα ασφάλειας} Πρόοδος + Διατήρηση
+\subparagraph*{Πρόοδος}
+Άν $ \varnothing; M \vdash e : \tau$ τότε είτε $e$ τιμή είτε 
+για κάθε $m$, τέτοιο ώστε $\varnothing \vdash m : M$, υπάρχει $(u,m')$  τέτοιο ώστε $(e,m) \Downarrow (u,m')$
+\subparagraph*{Διατήρηση}
+Αν $\Gamma; M \vdash e : \tau,\; \Gamma \vdash m : M$ και $(e,m) \Downarrow (u,m')$
+τότε υπάρχει $M'$ τέτοιο ώστε 
+$M\subseteq M',\; \Gamma \vdash m' : M'$ και $\Gamma ; M' \vdash u : \tau$
+
+\paragraph*{Σύγκριση}
+Με την σημασιολογία μεγάλων βημάτων χρειαζόμαστε λιγότερους κανόνες και αποφεύγουμε κάποια βήματα αλλά δεν μπορούμε να μελετήσουμε κολλημένες καταστάσεις. 
+
+Με την σημασιολογία μικρών βημάτων έχουμε μεγαλύτερη λεπτομέρεια, η οποία όμως μπορεί να μην χρειάζεται, αφού εκφράζει μία-μία τις καταστάσεις από τις οποίες περνάει η αφηρημένη μηχανή.
+
+Γενικά με την πρώτη κερδίζουμε απλότητα αλλά χάνουμε εκφραστικότητα.
+Επίσης περιγράφει πιο άμεσα τον τρόπο που θα υλοποιούσε κάποιος την αφηρημένη μηχανή (διερμηνέα) για μία γλώσσα.
+\end{document}
